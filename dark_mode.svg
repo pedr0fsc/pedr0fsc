@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="420" viewBox="0 0 850 420" fill="none">
+  <style>
+    .text { font-family: 'Ubuntu Mono', monospace; font-size: 13px; fill: #E1E4E8; }
+    .label { fill: #F97316; font-weight: bold; }
+    .value { fill: #79C0FF; }
+    .dots { fill: #444c56; }
+    .ascii { fill: #6e7681; font-size: 8px; }
+  </style>
+  <rect width="850" height="420" rx="6" fill="#0D1117"/>
+  <text x="20" y="40" class="ascii" xml:space="preserve">
+      (COLE SUA ASCII ART AQUI)
+  </text>
+  <g transform="translate(380, 30)">
+    <text x="0" y="0" class="text" font-weight="bold">pedr0fsc <tspan class="dots">---------------------------------------</tspan></text>
+    <text x="10" y="25" class="text"><tspan class="label">OS:</tspan><tspan id="os_dots" class="dots"> </tspan><tspan class="value" id="os_val"></tspan></text>
+    <text x="10" y="45" class="text"><tspan class="label">Uptime:</tspan><tspan id="age_data_dots" class="dots"> </tspan><tspan class="value" id="age_data"></tspan></text>
+    <text x="10" y="65" class="text"><tspan class="label">Host:</tspan><tspan id="host_dots" class="dots"> </tspan><tspan class="value" id="host_val"></tspan></text>
+    
+    <text x="0" y="115" class="text"><tspan class="label">Languages.Prog:</tspan><tspan id="lang_prog_dots" class="dots"> </tspan><tspan class="value" id="lang_prog_val"></tspan></text>
+    
+    <text x="0" y="215" class="text">- Contact <tspan class="dots">------------------------------------------</tspan></text>
+    <text x="10" y="235" class="text"><tspan class="label">Email:</tspan><tspan id="email_dots" class="dots"> </tspan><tspan class="value" id="email_val"></tspan></text>
+    
+    <text x="0" y="265" class="text">- GitHub Stats <tspan class="dots">-------------------------------------</tspan></text>
+    <text x="10" y="285" class="text"><tspan class="label">Repos:</tspan><tspan id="repo_data_dots" class="dots"> </tspan><tspan class="value" id="repo_data">0</tspan></text>
+    <text x="10" y="305" class="text"><tspan class="label">Commits:</tspan><tspan id="commit_data_dots" class="dots"> </tspan><tspan class="value" id="commit_data">0</tspan></text>
+  </g>
+</svg>

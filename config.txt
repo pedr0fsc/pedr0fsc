@@ -1,0 +1,8 @@
+OS: Windows 11, Ubuntu
+Host: PUCPR Computer Science Student
+IDE: VSCode, IntelliJ, PyCharm, Arduino
+Languages_Prog: Python, Java, C, C++, JS
+Languages_Comp: HTML, CSS
+Languages_Real: Portuguese, English
+Hobbies: Board Games, Paint, Coding, Bike
+Email: pedrodafonsecaschwertner@gmail.com
