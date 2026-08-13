@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <svg xmlns="http://www.w3.org/2000/svg" width="850" height="420" viewBox="0 0 850 420" fill="none">
   <style>
-    .text { font-family: 'Ubuntu Mono', Consolas, 'Courier New', monospace; font-size: 13px; fill: #E1E4E8; }
-    .label { fill: #F97316; font-weight: bold; }
-    .value { fill: #79C0FF; }
-    .dots { fill: #444c56; }
-    .ascii { fill: #6e7681; font-size: 11px; }
-    .header { fill: #E1E4E8; font-weight: bold; }
+    .text { font-family: 'Ubuntu Mono', Consolas, 'Courier New', monospace; font-size: 13px; fill: #24292F; }
+    .label { fill: #D97706; font-weight: bold; }
+    .value { fill: #0969DA; }
+    .dots { fill: #AFB8C1; }
+    .ascii { fill: #656D76; font-size: 11px; }
+    .header { fill: #24292F; font-weight: bold; }
   </style>
-  <rect width="850" height="420" rx="6" fill="#0D1117"/>
+  <rect width="850" height="420" rx="6" fill="#FFFFFF" stroke="#D0D7DE"/>
   <text x="28" y="55" class="ascii" xml:space="preserve">
     __________________
    |  ____________  |
