@@ -1,12 +1,29 @@
 import datetime
+import hashlib
+import json
 import os
+
 import requests
-from lxml import etree
 from dateutil import relativedelta
+from lxml import etree
+
+try:
+    from zoneinfo import ZoneInfo
+
+    SP_TZ = ZoneInfo("America/Sao_Paulo")
+except Exception:
+    # Windows without tzdata, or minimal images: Sao Paulo is UTC-3 year-round
+    SP_TZ = datetime.timezone(datetime.timedelta(hours=-3))
 
 USER_NAME = os.getenv("USER_NAME", "pedr0fsc")
 HEADERS = {"authorization": f"token {os.getenv('ACCESS_TOKEN', '')}"}
 BIRTHDAY = datetime.datetime(2007, 12, 27)
+STATE_FILE = ".profile_state.json"
+SVG_FILES = ("dark_mode.svg", "light_mode.svg")
+
+
+def now_sp():
+    return datetime.datetime.now(SP_TZ)
 
 
 def graphql(query, variables=None):
@@ -24,7 +41,8 @@ def graphql(query, variables=None):
 
 
 def get_uptime(birthday):
-    diff = relativedelta.relativedelta(datetime.datetime.today(), birthday)
+    today = now_sp().replace(tzinfo=None)
+    diff = relativedelta.relativedelta(today, birthday)
     years = f"{diff.years} year{'s' if diff.years != 1 else ''}"
     months = f"{diff.months} month{'s' if diff.months != 1 else ''}"
     days = f"{diff.days} day{'s' if diff.days != 1 else ''}"
@@ -62,7 +80,7 @@ def get_commit_count(created_at):
     start = datetime.datetime.fromisoformat(created_at.replace("Z", "+00:00")).replace(
         tzinfo=None
     )
-    end = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    end = now_sp().astimezone(datetime.timezone.utc).replace(tzinfo=None)
     total = 0
     query = """
     query($login: String!, $from: DateTime!, $to: DateTime!) {
@@ -116,6 +134,57 @@ def get_config_txt():
     return conf
 
 
+def config_fingerprint(config):
+    payload = json.dumps(config, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def load_state():
+    if not os.path.exists(STATE_FILE):
+        return {}
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2, sort_keys=True)
+        f.write("\n")
+
+
+def should_update(config, stats, uptime):
+    """Update only when SP day rolls over, stats change, or config.txt changes."""
+    state = load_state()
+    sp_date = now_sp().date().isoformat()
+    conf_hash = config_fingerprint(config)
+    reasons = []
+
+    if state.get("sp_date") != sp_date:
+        reasons.append(f"new Sao Paulo day ({sp_date})")
+    if state.get("config_hash") != conf_hash:
+        reasons.append("config.txt changed")
+    if state.get("stats") != stats:
+        reasons.append("GitHub stats changed")
+    if state.get("uptime") != uptime:
+        reasons.append("uptime changed")
+
+    # First run / missing SVGs should always refresh
+    if not state or any(not os.path.exists(path) for path in SVG_FILES):
+        reasons.append("initial sync")
+
+    # Deduplicate while keeping order
+    unique = list(dict.fromkeys(reasons))
+    return unique, {
+        "sp_date": sp_date,
+        "config_hash": conf_hash,
+        "stats": stats,
+        "uptime": uptime,
+    }
+
+
 def justify_svg(root, element_id, text, max_len=30):
     value = str(text)
     val_el = root.find(f".//*[@id='{element_id}']")
@@ -132,7 +201,7 @@ def justify_svg(root, element_id, text, max_len=30):
 def process_svg(filename, config, stats, uptime):
     if not os.path.exists(filename):
         print(f"Skipping missing file: {filename}")
-        return
+        return False
 
     tree = etree.parse(filename)
     root = tree.getroot()
@@ -154,16 +223,25 @@ def process_svg(filename, config, stats, uptime):
 
     tree.write(filename, encoding="utf-8", xml_declaration=True)
     print(f"Updated {filename}")
+    return True
 
 
 if __name__ == "__main__":
     config = get_config_txt()
     stats = get_github_stats()
     uptime = get_uptime(BIRTHDAY)
+    print(f"Sao Paulo date: {now_sp().date().isoformat()}")
     print(
         f"Stats -> repos={stats['repos']}, commits={stats['commits']}, "
         f"stars={stats['stars']}, followers={stats['followers']}"
     )
-    process_svg("dark_mode.svg", config, stats, uptime)
-    process_svg("light_mode.svg", config, stats, uptime)
-    print("SVG updated successfully!")
+
+    reasons, new_state = should_update(config, stats, uptime)
+    if not reasons:
+        print("No update needed (same day, stats, and config).")
+    else:
+        print("Updating because: " + "; ".join(reasons))
+        for svg in SVG_FILES:
+            process_svg(svg, config, stats, uptime)
+        save_state(new_state)
+        print("SVG updated successfully!")

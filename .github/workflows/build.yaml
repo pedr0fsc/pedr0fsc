@@ -3,9 +3,14 @@ name: README build
 on:
   push:
     branches: [main]
+    paths:
+      - "config.txt"
+      - "today.py"
+      - ".github/workflows/build.yaml"
   schedule:
-    # Refresh profile stats every 6 hours
-    - cron: "0 */6 * * *"
+    # America/Sao_Paulo (UTC-3, no DST). Script only writes when day/stats/config change.
+    - cron: "5 3 * * *"   # 00:05 SP — day rollover
+    - cron: "5 15 * * *"  # 12:05 SP — mid-day stats check
   workflow_dispatch:
 
 permissions:
@@ -24,18 +29,19 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests lxml python-dateutil
+        run: pip install requests lxml python-dateutil tzdata
 
       - name: Run script
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           USER_NAME: pedr0fsc
+          TZ: America/Sao_Paulo
         run: python today.py
 
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dark_mode.svg light_mode.svg
+          git add dark_mode.svg light_mode.svg .profile_state.json
           git diff --staged --quiet || git commit -m "chore: update profile SVG stats"
           git push
