@@ -17,9 +17,23 @@ except Exception:
 
 USER_NAME = os.getenv("USER_NAME", "pedr0fsc")
 HEADERS = {"authorization": f"token {os.getenv('ACCESS_TOKEN', '')}"}
-BIRTHDAY = datetime.datetime(2007, 12, 27)
+BIRTHDAY = datetime.date(2007, 12, 27)
 STATE_FILE = ".profile_state.json"
 SVG_FILES = ("dark_mode.svg", "light_mode.svg")
+PROFILE_REPO = USER_NAME  # username/username profile README repo
+
+# Commits created by the SVG update workflow (never counted in the card)
+AUTOMATION_EMAILS = (
+    "41898282+github-actions[bot]@users.noreply.github.com",
+    "github-actions[bot]@users.noreply.github.com",
+    "action@github.com",
+    "profile-bot@users.noreply.github.com",
+)
+AUTOMATION_MESSAGE_PREFIXES = (
+    "chore: update profile SVG stats",
+    "chore(profile-bot):",
+    "Update SVG",
+)
 
 
 def now_sp():
@@ -31,7 +45,7 @@ def graphql(query, variables=None):
         "https://api.github.com/graphql",
         json={"query": query, "variables": variables or {}},
         headers=HEADERS,
-        timeout=30,
+        timeout=60,
     )
     response.raise_for_status()
     payload = response.json()
@@ -41,8 +55,10 @@ def graphql(query, variables=None):
 
 
 def get_uptime(birthday):
-    today = now_sp().replace(tzinfo=None)
-    diff = relativedelta.relativedelta(today, birthday)
+    """Age/uptime from birthday to today's date in America/Sao_Paulo."""
+    today = now_sp().date()
+    born = birthday if isinstance(birthday, datetime.date) else birthday.date()
+    diff = relativedelta.relativedelta(today, born)
     years = f"{diff.years} year{'s' if diff.years != 1 else ''}"
     months = f"{diff.months} month{'s' if diff.months != 1 else ''}"
     days = f"{diff.days} day{'s' if diff.days != 1 else ''}"
@@ -54,6 +70,7 @@ def get_user_meta():
         """
         query($login: String!) {
             user(login: $login) {
+                id
                 createdAt
                 followers { totalCount }
                 repositories(first: 100, ownerAffiliations: OWNER, isFork: false) {
@@ -68,6 +85,7 @@ def get_user_meta():
     user = data["user"]
     stars = sum(repo["stargazerCount"] for repo in user["repositories"]["nodes"])
     return {
+        "id": user["id"],
         "created_at": user["createdAt"],
         "followers": user["followers"]["totalCount"],
         "repos": user["repositories"]["totalCount"],
@@ -75,8 +93,8 @@ def get_user_meta():
     }
 
 
-def get_commit_count(created_at):
-    """Sum commit contributions year-by-year since account creation."""
+def get_contribution_commits(created_at):
+    """Sum the account's own commit contributions year-by-year."""
     start = datetime.datetime.fromisoformat(created_at.replace("Z", "+00:00")).replace(
         tzinfo=None
     )
@@ -108,19 +126,86 @@ def get_commit_count(created_at):
     return total
 
 
-def get_github_stats():
-    try:
-        meta = get_user_meta()
-        commits = get_commit_count(meta["created_at"])
-        return {
-            "repos": meta["repos"],
-            "followers": meta["followers"],
-            "stars": meta["stars"],
-            "commits": commits,
+def is_automation_commit(message, email=None):
+    msg = (message or "").strip()
+    if any(msg.startswith(prefix) for prefix in AUTOMATION_MESSAGE_PREFIXES):
+        return True
+    if email and email.lower() in {e.lower() for e in AUTOMATION_EMAILS}:
+        return True
+    return False
+
+
+def count_automation_commits_on_profile(user_id):
+    """
+    Count update-system commits on the profile README repo.
+
+    Returns (automation_total, user_authored_automation_total).
+    Only user-authored automation commits are subtracted from contribution totals.
+    """
+    data = graphql(
+        """
+        query($owner: String!, $name: String!, $userId: ID!, $emails: [String!]) {
+            repository(owner: $owner, name: $name) {
+                defaultBranchRef {
+                    target {
+                        ... on Commit {
+                            bot: history(author: {emails: $emails}) {
+                                totalCount
+                            }
+                            mine: history(first: 100, author: {id: $userId}) {
+                                nodes { messageHeadline }
+                            }
+                        }
+                    }
+                }
+            }
         }
-    except Exception as exc:
-        print(f"GitHub stats fallback ({exc})")
-        return {"repos": 0, "followers": 0, "stars": 0, "commits": 0}
+        """,
+        {
+            "owner": USER_NAME,
+            "name": PROFILE_REPO,
+            "userId": user_id,
+            "emails": list(AUTOMATION_EMAILS),
+        },
+    )
+
+    target = (
+        data["repository"]["defaultBranchRef"]["target"]
+        if data["repository"]["defaultBranchRef"]
+        else None
+    )
+    if not target:
+        return 0, 0
+
+    bot_total = target["bot"]["totalCount"]
+    user_automation = sum(
+        1
+        for node in target["mine"]["nodes"]
+        if is_automation_commit(node.get("messageHeadline"))
+    )
+    return bot_total + user_automation, user_automation
+
+
+def get_commit_count(created_at, user_id):
+    raw = get_contribution_commits(created_at)
+    automation_total, user_automation = count_automation_commits_on_profile(user_id)
+    counted = max(0, raw - user_automation)
+    print(
+        f"Commits -> contributions={raw}, profile-bot={automation_total}, "
+        f"excluded_user_automation={user_automation}, counted={counted}"
+    )
+    return counted
+
+
+def get_github_stats():
+    meta = get_user_meta()
+    commits = get_commit_count(meta["created_at"], meta["id"])
+    return {
+        "repos": meta["repos"],
+        "followers": meta["followers"],
+        "stars": meta["stars"],
+        "commits": commits,
+    }
 
 
 def get_config_txt():
@@ -228,9 +313,17 @@ def process_svg(filename, config, stats, uptime):
 
 if __name__ == "__main__":
     config = get_config_txt()
-    stats = get_github_stats()
+    try:
+        stats = get_github_stats()
+    except Exception as exc:
+        print(f"GitHub stats failed; leaving SVGs unchanged ({exc})")
+        raise SystemExit(1)
+
     uptime = get_uptime(BIRTHDAY)
-    print(f"Sao Paulo date: {now_sp().date().isoformat()}")
+    sp_now = now_sp()
+    print(f"Sao Paulo now: {sp_now.isoformat()}")
+    print(f"Sao Paulo date: {sp_now.date().isoformat()}")
+    print(f"Uptime (birthday {BIRTHDAY.isoformat()}): {uptime}")
     print(
         f"Stats -> repos={stats['repos']}, commits={stats['commits']}, "
         f"stars={stats['stars']}, followers={stats['followers']}"
