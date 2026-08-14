@@ -5,21 +5,21 @@
     .label { fill: #D97706; font-weight: bold; }
     .value { fill: #0969DA; }
     .dots { fill: #AFB8C1; }
-    .ascii { fill: #656D76; font-size: 11px; }
+    .ascii { fill: #656D76; font-size: 11px; font-family: 'Ubuntu Mono', Consolas, 'Courier New', monospace; }
     .header { fill: #24292F; font-weight: bold; }
   </style>
   <rect width="850" height="420" rx="6" fill="#FFFFFF" stroke="#D0D7DE"/>
   <text x="28" y="55" class="ascii" xml:space="preserve">
-    __________________
-   |  ____________  |
-   | |            | |
-   | |  &gt;_/       | |
-   | |            | |
-   | |____________| |
-   |________________|
-      /_/\_/\__/\_\
-     (  pedr0fsc  )
-      \__________/
+    <tspan x="28" dy="0">    __________________</tspan>
+    <tspan x="28" dy="13">   |  ____________  |</tspan>
+    <tspan x="28" dy="13">   | |            | |</tspan>
+    <tspan x="28" dy="13">   | |  &gt;_/       | |</tspan>
+    <tspan x="28" dy="13">   | |            | |</tspan>
+    <tspan x="28" dy="13">   | |____________| |</tspan>
+    <tspan x="28" dy="13">   |________________|</tspan>
+    <tspan x="28" dy="13">      /_/\_/\__/\_\</tspan>
+    <tspan x="28" dy="13">     (  pedr0fsc  )</tspan>
+    <tspan x="28" dy="13">      \__________/</tspan>
   </text>
   <g transform="translate(300, 36)">
     <text x="0" y="0" class="text header">pedr0fsc <tspan class="dots">---------------------------------------</tspan></text>
