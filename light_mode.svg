@@ -39,7 +39,7 @@
 
     <text x="0" y="282" class="text header">- GitHub Stats <tspan class="dots">-------------------------------------</tspan></text>
     <text x="10" y="306" class="text"><tspan class="label">Repos:</tspan><tspan id="repo_data_dots" class="dots"> .......................... </tspan><tspan class="value" id="repo_data">42</tspan></text>
-    <text x="10" y="326" class="text"><tspan class="label">Commits:</tspan><tspan id="commit_data_dots" class="dots"> ....................... </tspan><tspan class="value" id="commit_data">310</tspan></text>
+    <text x="10" y="326" class="text"><tspan class="label">Commits:</tspan><tspan id="commit_data_dots" class="dots"> ....................... </tspan><tspan class="value" id="commit_data">312</tspan></text>
     <text x="10" y="346" class="text"><tspan class="label">Stars:</tspan><tspan id="star_data_dots" class="dots"> ........................... </tspan><tspan class="value" id="star_data">8</tspan></text>
     <text x="10" y="366" class="text"><tspan class="label">Followers:</tspan><tspan id="follower_data_dots" class="dots"> ...................... </tspan><tspan class="value" id="follower_data">17</tspan></text>
   </g>
