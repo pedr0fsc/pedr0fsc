@@ -41,6 +41,6 @@
     <text x="10" y="306" class="text"><tspan class="label">Repos:</tspan><tspan id="repo_data_dots" class="dots"> .......................... </tspan><tspan class="value" id="repo_data">46</tspan></text>
     <text x="10" y="326" class="text"><tspan class="label">Commits:</tspan><tspan id="commit_data_dots" class="dots"> ....................... </tspan><tspan class="value" id="commit_data">333</tspan></text>
     <text x="10" y="346" class="text"><tspan class="label">Stars:</tspan><tspan id="star_data_dots" class="dots"> ........................... </tspan><tspan class="value" id="star_data">8</tspan></text>
-    <text x="10" y="366" class="text"><tspan class="label">Followers:</tspan><tspan id="follower_data_dots" class="dots"> ...................... </tspan><tspan class="value" id="follower_data">19</tspan></text>
+    <text x="10" y="366" class="text"><tspan class="label">Followers:</tspan><tspan id="follower_data_dots" class="dots"> ...................... </tspan><tspan class="value" id="follower_data">20</tspan></text>
   </g>
 </svg>
